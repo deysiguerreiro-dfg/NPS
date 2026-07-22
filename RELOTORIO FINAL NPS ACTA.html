@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Relatório Final NPS Acta Educação 2026.1</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+:root {
+  --bg:#f4f6fb; --card:#ffffff; --text:#172033; --muted:#667085; --line:#e6e9f0;
+  --blue:#3157d5; --green:#12a150; --yellow:#f4b400; --red:#d93025; --dark:#0f172a;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);font-family:Arial,Helvetica,sans-serif;color:var(--text)}
+.container{max-width:1280px;margin:0 auto;padding:24px}
+.header{background:linear-gradient(135deg,#182848,#3157d5);color:white;border-radius:22px;padding:28px;margin-bottom:18px;box-shadow:0 12px 30px rgba(28,48,120,.20)}
+.header h1{margin:0 0 8px;font-size:28px}
+.header p{margin:0;opacity:.92;line-height:1.5}
+.controls{display:flex;gap:12px;align-items:center;flex-wrap:wrap;background:white;border-radius:16px;padding:16px;margin-bottom:18px;box-shadow:0 6px 20px rgba(15,23,42,.06)}
+select{padding:12px 14px;border:1px solid var(--line);border-radius:12px;font-size:15px;min-width:280px;background:#fff;color:var(--dark)}
+.badge{display:inline-block;border-radius:999px;padding:7px 12px;font-weight:700;font-size:13px;background:#eef2ff;color:#3157d5}
+.grid{display:grid;grid-template-columns:repeat(12,1fr);gap:16px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:18px;box-shadow:0 6px 20px rgba(15,23,42,.05)}
+.kpi{grid-column:span 2;min-height:112px}
+.kpi .label{font-size:13px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.03em}
+.kpi .value{font-size:30px;font-weight:800;margin-top:10px;color:var(--dark)}
+.kpi .sub{font-size:12px;color:var(--muted);margin-top:6px}
+.wide6{grid-column:span 6} .wide8{grid-column:span 8} .wide4{grid-column:span 4} .wide12{grid-column:span 12}
+.chartbox{height:320px}
+.chartbox.small{height:260px}
+.alert{border-left:8px solid #12a150;background:#f0fdf4}
+.alert.red{border-left-color:var(--red);background:#fff1f1}
+.alert.yellow{border-left-color:var(--yellow);background:#fffbeb}
+.alert h3{margin:0 0 8px;font-size:18px}
+.alert p{margin:6px 0;color:#344054;line-height:1.45}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{padding:10px;border-bottom:1px solid var(--line);text-align:left}
+th{background:#f8fafc;color:#475467;font-size:12px;text-transform:uppercase;letter-spacing:.03em}
+tr:hover{background:#f9fbff}
+.nps-good{font-weight:800;color:var(--green)} .nps-mid{font-weight:800;color:#b7791f} .nps-bad{font-weight:800;color:var(--red)}
+.note{font-size:12px;color:var(--muted);line-height:1.4}
+.tag{display:inline-block;border-radius:999px;padding:4px 8px;font-size:12px;font-weight:700}
+.tag.red{background:#fee2e2;color:#991b1b} .tag.yellow{background:#fef3c7;color:#92400e} .tag.green{background:#dcfce7;color:#166534}
+.footer{margin:18px 0 0;color:#667085;font-size:12px;text-align:center}
+@media(max-width:900px){.kpi,.wide4,.wide6,.wide8,.wide12{grid-column:span 12}.container{padding:12px}.header h1{font-size:22px}}
+@media print{body{background:white}.container{max-width:none;padding:10px}.controls{display:none}.card,.header{box-shadow:none}.chartbox{height:260px}}
+</style>
+</head>
+<body>
+<div class="container">
+  <section class="header">
+    <h1>Relatório Final NPS Acta Educação 2026.1</h1>
+    <p>Análise consolidada da percepção das famílias sobre a experiência educacional das unidades da rede Acta Educação. Resultados apresentados com base exclusivamente nas respostas válidas da pesquisa NPS.</p>
+  </section>
+
+  <section class="controls">
+    <label for="schoolSelect"><strong>Filtrar escola:</strong></label>
+    <select id="schoolSelect"></select>
+    <span class="badge" id="levelBadge">-</span>
+  </section>
+
+  <section class="grid">
+    <div class="card kpi"><div class="label">NPS</div><div class="value" id="kpiNps">-</div><div class="sub" id="kpiNivel">-</div></div>
+    <div class="card kpi"><div class="label">Respostas válidas</div><div class="value" id="kpiValidas">-</div><div class="sub">base da análise</div></div>
+    <div class="card kpi"><div class="label">Promotores</div><div class="value" id="kpiProm">-</div><div class="sub" id="kpiPromPct">-</div></div>
+    <div class="card kpi"><div class="label">Neutros</div><div class="value" id="kpiNeut">-</div><div class="sub" id="kpiNeutPct">-</div></div>
+    <div class="card kpi"><div class="label">Detratores</div><div class="value" id="kpiDet">-</div><div class="sub" id="kpiDetPct">-</div></div>
+    <div class="card kpi"><div class="label">Turmas &lt; 5</div><div class="value" id="kpiLowSample">-</div><div class="sub">não usar isoladamente</div></div>
+
+    <div class="card wide12 alert" id="observationBox">
+      <h3 id="obsTitle">Observação</h3>
+      <p id="obsText">-</p>
+    </div>
+
+    <div class="card wide8">
+      <h3 id="tituloRanking">Ranking de NPS por escola</h3>
+      <div class="chartbox"><canvas id="rankingChart"></canvas></div>
+      <p class="note">O ranking usa o NPS da aba resumo e não utiliza taxa de resposta.</p>
+    </div>
+    <div class="card wide4">
+      <h3 id="tituloDistribuicao">Distribuição da escola filtrada</h3>
+      <div class="chartbox small"><canvas id="distChart"></canvas></div>
+    </div>
+
+    <div class="card wide6">
+      <h3 id="tituloSegmento">NPS por segmento</h3>
+      <div class="chartbox"><canvas id="segmentChart"></canvas></div>
+    </div>
+    <div class="card wide6">
+      <h3 id="tituloValidosSegmento">Respostas válidas por segmento</h3>
+      <div class="chartbox"><canvas id="segmentValidChart"></canvas></div>
+    </div>
+
+    <div class="card wide12">
+      <h3 id="tituloTurmas">Turmas da escola filtrada</h3>
+      <p class="note">Turmas com menos de 5 respostas válidas aparecem sinalizadas como amostra insuficiente.</p>
+      <div style="overflow-x:auto"><table id="turmasTable"></table></div>
+    </div>
+  </section>
+  <div class="footer">Relatório Final NPS Acta Educação 2026.1 — base consolidada com respostas válidas.</div>
+</div>
+<script>
+const summary = [{"Escola": "ST THOMAS", "Total Válido": 26, "Promotores": 20, "Neutros": 2, "Detratores": 4, "% Promotores": 0.7692307692307693, "% Neutros": 0.07692307692307693, "% Detratores": 0.15384615384615385, "NPS Geral": 61.53846153846154, "Nível Geral da Escola": "Zona de qualidade", "Soma PND": 26, "Diferenca Validacao": 0}, {"Escola": "FÊNNIX BABY", "Total Válido": 45, "Promotores": 37, "Neutros": 7, "Detratores": 1, "% Promotores": 0.8222222222222222, "% Neutros": 0.15555555555555556, "% Detratores": 0.022222222222222223, "NPS Geral": 80, "Nível Geral da Escola": "Zona de excelência", "Soma PND": 45, "Diferenca Validacao": 0}, {"Escola": "ANNA TAVARES", "Total Válido": 71, "Promotores": 15, "Neutros": 16, "Detratores": 40, "% Promotores": 0.2112676056338028, "% Neutros": 0.22535211267605634, "% Detratores": 0.5633802816901409, "NPS Geral": -35.21126760563381, "Nível Geral da Escola": "Zona crítica", "Soma PND": 71, "Diferenca Validacao": 0}, {"Escola": "OLIMPUS OBJETIVO", "Total Válido": 124, "Promotores": 85, "Neutros": 27, "Detratores": 12, "% Promotores": 0.6854838709677419, "% Neutros": 0.21774193548387097, "% Detratores": 0.0967741935483871, "NPS Geral": 58.87096774193547, "Nível Geral da Escola": "Zona de qualidade", "Soma PND": 124, "Diferenca Validacao": 0}, {"Escola": "COC EFETIVO", "Total Válido": 143, "Promotores": 101, "Neutros": 29, "Detratores": 13, "% Promotores": 0.7062937062937062, "% Neutros": 0.20279720279720279, "% Detratores": 0.09090909090909091, "NPS Geral": 61.53846153846153, "Nível Geral da Escola": "Zona de qualidade", "Soma PND": 143, "Diferenca Validacao": 0}, {"Escola": "PETELEKO", "Total Válido": 110, "Promotores": 96, "Neutros": 13, "Detratores": 1, "% Promotores": 0.8727272727272727, "% Neutros": 0.11818181818181818, "% Detratores": 0.00909090909090909, "NPS Geral": 86.36363636363636, "Nível Geral da Escola": "Zona de excelência", "Soma PND": 110, "Diferenca Validacao": 0}, {"Escola": "COLÉGIO PLANETA", "Total Válido": 49, "Promotores": 33, "Neutros": 9, "Detratores": 7, "% Promotores": 0.673469387755102, "% Neutros": 0.1836734693877551, "% Detratores": 0.14285714285714285, "NPS Geral": 53.06122448979591, "Nível Geral da Escola": "Zona de qualidade", "Soma PND": 49, "Diferenca Validacao": 0}, {"Escola": "COLÉGIO EXATO", "Total Válido": 95, "Promotores": 85, "Neutros": 7, "Detratores": 3, "% Promotores": 0.8947368421052632, "% Neutros": 0.07368421052631578, "% Detratores": 0.031578947368421054, "NPS Geral": 86.31578947368422, "Nível Geral da Escola": "Zona de excelência", "Soma PND": 95, "Diferenca Validacao": 0}, {"Escola": "FÊNNIX MATRIZ", "Total Válido": 111, "Promotores": 69, "Neutros": 31, "Detratores": 11, "% Promotores": 0.6216216216216216, "% Neutros": 0.27927927927927926, "% Detratores": 0.0990990990990991, "NPS Geral": 52.25225225225225, "Nível Geral da Escola": "Zona de qualidade", "Soma PND": 111, "Diferenca Validacao": 0}, {"Escola": "DELTA", "Total Válido": 461, "Promotores": 361, "Neutros": 71, "Detratores": 28, "% Promotores": 0.7830802603036876, "% Neutros": 0.1540130151843818, "% Detratores": 0.06073752711496746, "NPS Geral": 72.23427331887201, "Nível Geral da Escola": "Zona de qualidade", "Soma PND": 460, "Diferenca Validacao": -1}, {"Escola": "ESTRELINHAS", "Total Válido": 327, "Promotores": 266, "Neutros": 47, "Detratores": 14, "% Promotores": 0.8134556574923547, "% Neutros": 0.1437308868501529, "% Detratores": 0.04281345565749235, "NPS Geral": 77.06422018348623, "Nível Geral da Escola": "Zona de excelência", "Soma PND": 327, "Diferenca Validacao": 0}, {"Escola": "ESJC", "Total Válido": 188, "Promotores": 116, "Neutros": 34, "Detratores": 36, "% Promotores": 0.6170212765957447, "% Neutros": 0.18085106382978725, "% Detratores": 0.19148936170212766, "NPS Geral": 42.5531914893617, "Nível Geral da Escola": "Zona de aperfeiçoamento", "Soma PND": 186, "Diferenca Validacao": -2}, {"Escola": "CEAV JR", "Total Válido": 20, "Promotores": 8, "Neutros": 9, "Detratores": 3, "% Promotores": 0.4, "% Neutros": 0.45, "% Detratores": 0.15, "NPS Geral": 25, "Nível Geral da Escola": "Zona de aperfeiçoamento", "Soma PND": 20, "Diferenca Validacao": 0}, {"Escola": "ESSENCIAL", "Total Válido": 84, "Promotores": 68, "Neutros": 20, "Detratores": 6, "% Promotores": 0.8095238095238095, "% Neutros": 0.23809523809523808, "% Detratores": 0.07142857142857142, "NPS Geral": 73.80952380952381, "Nível Geral da Escola": "Zona de qualidade", "Soma PND": 94, "Diferenca Validacao": 10}, {"Escola": "ACTA - CONSOLIDADO", "Total Válido": 1854, "Promotores": 1360, "Neutros": 322, "Detratores": 179, "% Promotores": 0.7335490830636462, "% Neutros": 0.17367853290183388, "% Detratores": 0.0965480043149946, "NPS Geral": 63.700107874865154, "Nível Geral da Escola": "Zona de qualidade", "Soma PND": 1861, "Diferenca Validacao": 7}];
+const segments = [{"Escola": "ST THOMAS", "Segmento": "Infantil", "Promotores": 20, "Neutros": 2, "Detratores": 4, "Total Válido": 26, "NPS": 61.53846153846154, "Nível": "Zona de qualidade"}, {"Escola": "FÊNNIX BABY", "Segmento": "Infantil", "Promotores": 37, "Neutros": 7, "Detratores": 1, "Total Válido": 45, "NPS": 80, "Nível": "Zona de excelência"}, {"Escola": "COC EFETIVO", "Segmento": "Infantil", "Promotores": 16, "Neutros": 2, "Detratores": 0, "Total Válido": 18, "NPS": 88.88888888888889, "Nível": "Zona de excelência"}, {"Escola": "COC EFETIVO", "Segmento": "Fundamental I", "Promotores": 52, "Neutros": 7, "Detratores": 4, "Total Válido": 63, "NPS": 76.19047619047619, "Nível": "Zona de excelência"}, {"Escola": "COC EFETIVO", "Segmento": "Fundamental II", "Promotores": 18, "Neutros": 15, "Detratores": 5, "Total Válido": 38, "NPS": 34.210526315789465, "Nível": "Zona de aperfeiçoamento"}, {"Escola": "COC EFETIVO", "Segmento": "Ensino Médio", "Promotores": 15, "Neutros": 5, "Detratores": 4, "Total Válido": 24, "NPS": 45.833333333333336, "Nível": "Zona de aperfeiçoamento"}, {"Escola": "COLÉGIO PLANETA", "Segmento": "Fundamental I", "Promotores": 20, "Neutros": 4, "Detratores": 6, "Total Válido": 30, "NPS": 46.666666666666664, "Nível": "Zona de aperfeiçoamento"}, {"Escola": "COLÉGIO PLANETA", "Segmento": "Infantil", "Promotores": 13, "Neutros": 5, "Detratores": 0, "Total Válido": 18, "NPS": 72.22222222222221, "Nível": "Zona de qualidade"}, {"Escola": "FÊNNIX MATRIZ", "Segmento": "Infantil", "Promotores": 15, "Neutros": 3, "Detratores": 1, "Total Válido": 19, "NPS": 73.6842105263158, "Nível": "Zona de qualidade"}, {"Escola": "FÊNNIX MATRIZ", "Segmento": "Fundamental I", "Promotores": 39, "Neutros": 16, "Detratores": 5, "Total Válido": 60, "NPS": 56.666666666666664, "Nível": "Zona de qualidade"}, {"Escola": "FÊNNIX MATRIZ", "Segmento": "Fundamental I", "Promotores": 15, "Neutros": 12, "Detratores": 5, "Total Válido": 32, "NPS": 31.25, "Nível": "Zona de aperfeiçoamento"}, {"Escola": "DELTA", "Segmento": "Infantil", "Promotores": 19, "Neutros": 3, "Detratores": 3, "Total Válido": 25, "NPS": 64, "Nível": "Zona de qualidade"}, {"Escola": "DELTA", "Segmento": "Fundamental I", "Promotores": 106, "Neutros": 27, "Detratores": 13, "Total Válido": 146, "NPS": 63.6986301369863, "Nível": "Zona de qualidade"}, {"Escola": "DELTA", "Segmento": "Fundamental II", "Promotores": 104, "Neutros": 19, "Detratores": 3, "Total Válido": 126, "NPS": 80.15873015873015, "Nível": "Zona de excelência"}, {"Escola": "DELTA", "Segmento": "Ensino Médio", "Promotores": 132, "Neutros": 22, "Detratores": 9, "Total Válido": 163, "NPS": 75.4601226993865, "Nível": "Zona de excelência"}, {"Escola": "ESTRELINHAS", "Segmento": "Infantil", "Promotores": 83, "Neutros": 12, "Detratores": 3, "Total Válido": 98, "NPS": 81.63265306122449, "Nível": "Zona de excelência"}, {"Escola": "ESTRELINHAS", "Segmento": "Fundamental I", "Promotores": 183, "Neutros": 35, "Detratores": 11, "Total Válido": 229, "NPS": 75.10917030567686, "Nível": "Zona de excelência"}, {"Escola": "ESJC", "Segmento": "Infantil", "Promotores": 25, "Neutros": 3, "Detratores": 5, "Total Válido": 33, "NPS": 60.60606060606061, "Nível": "Zona de qualidade"}, {"Escola": "ESJC", "Segmento": "Fundamental II", "Promotores": 32, "Neutros": 12, "Detratores": 12, "Total Válido": 56, "NPS": 35.71428571428571, "Nível": "Zona de aperfeiçoamento"}, {"Escola": "ESJC", "Segmento": "Fundamental I", "Promotores": 52, "Neutros": 13, "Detratores": 13, "Total Válido": 78, "NPS": 50, "Nível": "Zona de aperfeiçoamento"}, {"Escola": "ESJC", "Segmento": "Ensino Médio", "Promotores": 7, "Neutros": 6, "Detratores": 6, "Total Válido": 19, "NPS": 5.263157894736842, "Nível": "Zona de aperfeiçoamento"}, {"Escola": "CEAV JR", "Segmento": "Fundamental I", "Promotores": 4, "Neutros": 3, "Detratores": 2, "Total Válido": 9, "NPS": 22.22222222222222, "Nível": "Zona de aperfeiçoamento"}, {"Escola": "CEAV JR", "Segmento": "Infantil", "Promotores": 4, "Neutros": 6, "Detratores": 1, "Total Válido": 11, "NPS": 27.27272727272727, "Nível": "Zona de aperfeiçoamento"}, {"Escola": "PETELEKO", "Segmento": "Infantil", "Promotores": 41, "Neutros": 6, "Detratores": 0, "Total Válido": 47, "NPS": 87.2340425531915, "Nível": "Zona de excelência"}, {"Escola": "PETELEKO", "Segmento": "Fundamental I", "Promotores": 55, "Neutros": 7, "Detratores": 1, "Total Válido": 63, "NPS": 85.71428571428572, "Nível": "Zona de excelência"}, {"Escola": "COLÉGIO ESSENCIAL", "Segmento": "Infantil", "Promotores": 33, "Neutros": 13, "Detratores": 3, "Total Válido": 49, "NPS": 61.224489795918366, "Nível": "Zona de qualidade"}, {"Escola": "COLÉGIO ESSENCIAL", "Segmento": "Fundamental I", "Promotores": 28, "Neutros": 5, "Detratores": 2, "Total Válido": 35, "NPS": 74.28571428571429, "Nível": "Zona de qualidade"}, {"Escola": "COLÉGIO EXATO", "Segmento": "Fundamental II", "Promotores": 47, "Neutros": 4, "Detratores": 3, "Total Válido": 54, "NPS": 81.48148148148148, "Nível": "Zona de excelência"}, {"Escola": "COLÉGIO EXATO", "Segmento": "Ensino Médio", "Promotores": 38, "Neutros": 3, "Detratores": 0, "Total Válido": 41, "NPS": 92.6829268292683, "Nível": "Zona de excelência"}, {"Escola": "ANNA TAVARES", "Segmento": "Fundamental II", "Promotores": 6, "Neutros": 8, "Detratores": 8, "Total Válido": 22, "NPS": -9.090909090909093, "Nível": "Zona crítica"}, {"Escola": "ANNA TAVARES", "Segmento": "Ensino Médio", "Promotores": 1, "Neutros": 4, "Detratores": 13, "Total Válido": 18, "NPS": -66.66666666666666, "Nível": "Zona crítica"}, {"Escola": "ANNA TAVARES", "Segmento": "Fundamental I", "Promotores": 8, "Neutros": 3, "Detratores": 17, "Total Válido": 28, "NPS": -32.14285714285714, "Nível": "Zona crítica"}, {"Escola": "ANNA TAVARES", "Segmento": "Infantil", "Promotores": 0, "Neutros": 1, "Detratores": 1, "Total Válido": 2, "NPS": -50, "Nível": "Zona crítica"}, {"Escola": "OLIMPUS OBJETIVO", "Segmento": "Ensino Médio", "Promotores": 50, "Neutros": 13, "Detratores": 10, "Total Válido": 73, "NPS": 54.794520547945204, "Nível": "Zona de qualidade"}, {"Escola": "OLIMPUS OBJETIVO", "Segmento": "Fundamental II", "Promotores": 35, "Neutros": 14, "Detratores": 2, "Total Válido": 51, "NPS": 64.70588235294117, "Nível": "Zona de qualidade"}];
+const turmas = [{"Escola": "COLÉGIO PLANETA", "Segmento": "Fundamental I", "Turma": "5-ano-fund-1", "Promotores": 0, "Neutros": 2, "Detratores": 1, "Total Válido": 3, "NPS": -33.33333333333333, "Nível": "Zona crítica"}, {"Escola": "COLÉGIO PLANETA", "Segmento": "Fundamental I", "Turma": "3-ano-fund-1", "Promotores": 8, "Neutros": 1, "Detratores": 2, "Total Válido": 11, "NPS": 54.54545454545454, "Nível": "Zona de qualidade"}, {"Escola": "COLÉGIO PLANETA", "Segmento": "Fundamental I", "Turma": "1-ano-fund-1", "Promotores": 9, "Neutros": 0, "Detratores": 1, "Total Válido": 10, "NPS": 80, "Nível": "Zona de excelência"}, {"Escola": "COLÉGIO PLANETA", "Segmento": "Infantil", "Turma": "infantil-1", "Promotores": 7, "Neutros": 1, "Detratores": 0, "Total Válido": 8, "NPS": 87.5, "Nível": "Zona de excelência"}, {"Escola": "COLÉGIO PLANETA", "Segmento": "Fundamental I", "Turma": "4-ano-fund-1", "Promotores": 0, "Neutros": 1, "Detratores": 1, "Total Válido": 2, "NPS": -50, "Nível": "Zona crítica"}, {"Escola": "COLÉGIO PLANETA", "Segmento": "Fundamental I", "Turma": "2-ano-fund-1", "Promotores": 3, "Neutros": 0, "Detratores": 1, "Total Válido": 4, "NPS": 50, "Nível": "Zona de aperfeiçoamento"}, {"Escola": "COLÉGIO PLANETA", "Segmento": "Infantil", "Turma": "infantil-2", "Promotores": 2, "Neutros": 2, "Detratores": 0, "Total Válido": 4, "NPS": 50, "Nível": "Zona de aperfeiçoamento"}, {"Escola": "COLÉGIO PLANETA", "Segmento": "Infantil", "Turma": "infantil-4", "Promotores": 0, "Neutros": 1, "Detratores": 0, "Total Válido": 1, "NPS": 0, "Nível": "Zona de aperfeiçoamento"}, {"Escola": "COLÉGIO PLANETA", "Segmento": "Infantil", "Turma": "infantil-3", "Promotores": 2, "Neutros": 0, "Detratores": 0, "Total Válido": 2, "NPS": 100, "Nível": "Zona de excelência"}, {"Escola": "COLÉGIO PLANETA", "Segmento": "Infantil", "Turma": "infantil-5", "Promotores": 2, "Neutros": 1, "Detratores": 0, "Total Válido": 3, "NPS": 66.66666666666666, "Nível": "Zona de qualidade"}, {"Escola": "ESCOLA ESTRELINHAS", "Segmento": "Fundamental I", "Turma": "5-ano-fund-1", "Promotores": 43, "Neutros": 9, "Detratores": 3, "Total Válido": 55, "NPS": 72.72727272727273, "Nível": "Zona de qualidade"}, {"Escola": "ESCOLA ESTRELINHAS", "Segmento": "Fundamental I", "Turma": "4-ano-fund-1", "Promotores": 34, "Neutros": 9, "Detratores": 2, "Total Válido": 45, "NPS": 71.11111111111111, "Nível": "Zona de qualidade"}, {"Escola": "ESCOLA ESTRELINHAS", "Segmento": "Infantil", "Turma": "infantil-2", "Promotores": 19, "Neutros": 5, "Detratores": 0, "Total Válido": 24, "NPS": 79.16666666666666, "Nível": "Zona de excelência"}, {"Escola": "ESCOLA ESTRELINHAS", "Segmento": "Fundamental I", "Turma": "1-ano-fund-1", "Promotores": 36, "Neutros": 6, "Detratores": 1, "Total Válido": 43, "NPS": 81.3953488372093, "Nível": "Zona de excelência"}, {"Escola": "ESCOLA ESTRELINHAS", "Segmento": "Fundamental I", "Turma": "2-ano-fund-1", "Promotores": 34, "Neutros": 5, "Detratores": 4, "Total Válido": 43, "NPS": 69.76744186046511, "Nível": "Zona de qualidade"}, {"Escola": "ESCOLA ESTRELINHAS", "Segmento": "Fundamental I", "Turma": "3-ano-fund-1", "Promotores": 36, "Neutros": 6, "Detratores": 1, "Total Válido": 43, "NPS": 81.3953488372093, "Nível": "Zona de excelência"}, {"Escola": "ESCOLA ESTRELINHAS", "Segmento": "Infantil", "Turma": "infantil-5", "Promotores": 27, "Neutros": 3, "Detratores": 2, "Total Válido": 32, "NPS": 78.125, "Nível": "Zona de excelência"}, {"Escola": "ESCOLA ESTRELINHAS", "Segmento": "Infantil", "Turma": "infantil-4", "Promotores": 20, "Neutros": 0, "Detratores": 0, "Total Válido": 20, "NPS": 100, "Nível": "Zona de excelência"}, {"Escola": "ESCOLA ESTRELINHAS", "Segmento": "Infantil", "Turma": "infantil-3", "Promotores": 12, "Neutros": 2, "Detratores": 0, "Total Válido": 14, "NPS": 85.71428571428571, "Nível": "Zona de excelência"}, {"Escola": "ESCOLA ESTRELINHAS", "Segmento": "Infantil", "Turma": "infantil-1", "Promotores": 5, "Neutros": 2, "Detratores": 1, "Total Válido": 8, "NPS": 50, "Nível": "Zona de aperfeiçoamento"}, {"Escola": "ST THOMAS", "Segmento": "Infantil", "Turma": "infantil-4", "Promotores": 5, "Neutros": 0, "Detratores": 0, "Total Válido": 5, "NPS": 100, "Nível": "Zona de excelência"}, {"Escola": "ST THOMAS", "Segmento": "Infantil", "Turma": "bercario", "Promotores": 0, "Neutros": 0, "Detratores": 1, "Total Válido": 1, "NPS": -100, "Nível": "Zona crítica"}, {"Escola": "ST THOMAS", "Segmento": "Infantil", "Turma": "infantil-2", "Promotores": 14, "Neutros": 1, "Detratores": 0, "Total Válido": 15, "NPS": 93.33333333333333, "Nível": "Zona de excelência"}, {"Escola": "ST THOMAS", "Segmento": "Infantil", "Turma": "infantil-3", "Promotores": 3, "Neutros": 1, "Detratores": 0, "Total Válido": 4, "NPS": 75, "Nível": "Zona de qualidade"}, {"Escola": "ST THOMAS", "Segmento": "Infantil", "Turma": "infantil-1", "Promotores": 1, "Neutros": 0, "Detratores": 0, "Total Válido": 1, "NPS": 100, "Nível": "Zona de excelência"}, {"Escola": "FÊNNIX BABY ", "Segmento": "Infantil", "Turma": "bercario", "Promotores": 8, "Neutros": 0, "Detratores": 1, "Total Válido": 9, "NPS": 77.77777777777777, "Nível": "Zona de excelência"}, {"Escola": "FÊNNIX BABY ", "Segmento": "Infantil", "Turma": "infantil-1", "Promotores": 8, "Neutros": 2, "Detratores": 0, "Total Válido": 10, "NPS": 80, "Nível": "Zona de excelência"}, {"Escola": "FÊNNIX BABY ", "Segmento": "Infantil", "Turma": "infantil-2", "Promotores": 11, "Neutros": 0, "Detratores": 0, "Total Válido": 11, "NPS": 100, "Nível": "Zona de excelência"}, {"Escola": "FÊNNIX BABY ", "Segmento": "Infantil", "Turma": "infantil-3", "Promotores": 4, "Neutros": 2, "Detratores": 0, "Total Válido": 6, "NPS": 66.66666666666666, "Nível": "Zona de qualidade"}, {"Escola": "FÊNNIX BABY ", "Segmento": "Infantil", "Turma": "infantil-4", "Promotores": 5, "Neutros": 3, "Detratores": 0, "Total Válido": 8, "NPS": 62.5, "Nível": "Zona de qualidade"}, {"Escola": "FÊNNIX BABY ", "Segmento": "Infantil", "Turma": "infantil-5", "Promotores": 1, "Neutros": 0, "Detratores": 0, "Total Válido": 1, "NPS": 100, "Nível": "Zona de excelência"}, {"Escola": "COC EFETIVO", "Segmento": "Ensino médio ", "Turma": "1-serie-medio", "Promotores": 4, "Neutros": 2, "Detratores": 0, "Total Válido": 6, "NPS": 66.66666666666666, "Nível": "Zona de qualidade"}, {"Escola": "COC EFETIVO", "Segmento": "Fundamental II", "Turma": "9-ano-fund-2", "Promotores": 5, "Neutros": 6, "Detratores": 1, "Total Válido": 12, "NPS": 33.333333333333336, "Nível": "Zona de aperfeiçoamento"}, {"Escola": "COC EFETIVO", "Segmento": "Fundamental I", "Turma": "2-ano-fund-1", "Promotores": 13, "Neutros": 0, "Detratores": 0, "Total Válido": 13, "NPS": 100, "Nível": "Zona de excelência"}, {"Escola": "COC EFETIVO", "Segmento": "Fundamental I", "Turma": "5-ano-fund-1", "Promotores": 10, "Neutros": 2, "Detratores": 0, "Total Válido": 12, "NPS": 83.33333333333334, "Nível": "Zona de excelência"}, {"Escola": "COC EFETIVO", "Segmento": "Fundamental II", "Turma": "6-ano-fund-2", "Promotores": 6, "Neutros": 6, "Detratores": 2, "Total Válido": 14, "NPS": 28.57142857142857, "Nível": "Zona de aperfeiçoamento"}, {"Escola": "COC EFETIVO", "Segmento": "Infantil", "Turma": "infantil-4", "Promotores": 8, "Neutros": 1, "Detratores": 0, "Total Válido": 9, "NPS": 88.88888888888889, "Nível": "Zona de excelência"}, {"Escola": "COC EFETIVO", "Segmento": "Fundamental I", "Turma": "4-ano-fund-1", "Promotores": 12, "Neutros": 2, "Detratores": 1, "Total Válido": 15, "NPS": 73.33333333333334, "Nível": "Zona de qualidade"}, {"Escola": "COC EFETIVO", "Segmento": "Fundamental I", "Turma": "1-ano-fund-1", "Promotores": 13, "Neutros": 1, "Detratores": 2, "Total Válido": 16, "NPS": 68.75, "Nível": "Zona de qualidade"}, {"Escola": "COC EFETIVO", "Segmento": "Fundamental I", "Turma": "3-ano-fund-1", "Promotores": 4, "Neutros": 2, "Detratores": 1, "Total Válido": 7, "NPS": 42.857142857142854, "Nível": "Zona de aperfeiçoamento"}, {"Escola": "COC EFETIVO", "Segmento": "Ensino médio ", "Turma": "3-serie-medio", "Promotores": 6, "Neutros": 1, "Detratores": 1, "Total Válido": 8, "NPS": 62.5, "Nível": "Zona de qualidade"}, {"Escola": "COC EFETIVO", "Segmento": "Fundamental II", "Turma": "7-ano-fund-2", "Promotores": 2, "Neutros": 3, "Detratores": 1, "Total Válido": 6, "NPS": 16.666666666666664, "Nível": "Zona de aperfeiçoamento"}, {"Escola": "COC EFETIVO", "Segmento": "Fundamental II", "Turma": "8-ano-fund-2", "Promotores": 5, "Neutros": 0, "Detratores": 1, "Total Válido": 6, "NPS": 66.66666666666667, "Nível": "Zona de qualidade"}, {"Escola": "COC EFETIVO", "Segmento": "Ensino médio ", "Turma": "2-serie-medio", "Promotores": 5, "Neutros": 2, "Detratores": 3, "Total Válido": 10, "NPS": 20, "Nível": "Zona de aperfeiçoamento"}, {"Escola": "COC EFETIVO", "Segmento": "Infantil", "Turma": "infantil-5", "Promotores": 7, "Neutros": 1, "Detratores": 0, "Total Válido": 8, "NPS": 87.5, "Nível": "Zona de excelência"}, {"Escola": "COC EFETIVO", "Segmento": "Infantil", "Turma": "infantil-1", "Promotores": 1, "Neutros": 0, "Detratores": 0, "Total Válido": 1, "NPS": 100, "Nível": "Zona de excelência"}, {"Escola": "PETELEKO", "Segmento": "Fundamental I", "Turma": "4-ano-fund-1", "Promotores": 9, "Neutros": 2, "Detratores": 1, "Total Válido": 12, "NPS": 66.66666666666666, "Nível": "Zona de qualidade"}, {"Escola": "PETELEKO", "Segmento": "Fundamental I", "Turma": "5-ano-fund-1", "Promotores": 11, "Neutros": 1, "Detratores": 0, "Total Válido": 12, "NPS": 91.66666666666666, "Nível": "Zona de excelência"}, {"Escola": "PETELEKO", "Segmento": "Infantil", "Turma": "infantil-5", "Promotores": 9, "Neutros": 2, "Detratores": 0, "Total Válido": 11, "NPS": 81.81818181818183, "Nível": "Zona de excelência"}, {"Escola": "PETELEKO", "Segmento": "Fundamental I", "Turma": "2-ano-fund-1", "Promotores": 15, "Neutros": 2, "Detratores": 0, "Total Válido": 17, "NPS": 88.23529411764706, "Nível": "Zona de excelência"}, {"Escola": "PETELEKO", "Segmento": "Infantil", "Turma": "infantil-4", "Promotores": 15, "Neutros": 2, "Detratores": 0, "Total Válido": 17, "NPS": 88.23529411764706, "Nível": "Zona de excelência"}, {"Escola": "PETELEKO", "Segmento": "Infantil", "Turma": "infantil-3", "Promotores": 13, "Neutros": 2, "Detratores": 0, "Total Válido": 15, "NPS": 86.66666666666667, "Nível": "Zona de excelência"}, {"Escola": "PETELEKO", "Segmento": "Fundamental I", "Turma": "1-ano-fund-1", "Promotores": 15, "Neutros": 0, "Detratores": 0, "Total Válido": 15, "NPS": 100, "Nível": "Zona de excelência"}, {"Escola": "PETELEKO", "Segmento": "Fundamental I", "Turma": "3-ano-fund-1", "Promotores": 5, "Neutros": 2, "Detratores": 0, "Total Válido": 7, "NPS": 71.42857142857143, "Nível": "Zona de qualidade"}, {"Escola": "PETELEKO", "Segmento": "Infantil", "Turma": "infantil-1", "Promotores": 3, "Neutros": 0, "Detratores": 0, "Total Válido": 3, "NPS": 100, "Nível": "Zona de excelência"}, {"Escola": "PETELEKO", "Segmento": "Infantil", "Turma": "infantil-2", "Promotores": 1, "Neutros": 0, "Detratores": 0, "Total Válido": 1, "NPS": 100, "Nível": "Zona de excelência"}, {"Escola": "COLÉGIO EXATO", "Segmento": "Fundamental II", "Turma": "9-ano-fund-2", "Promotores": 8, "Neutros": 1, "Detratores": 3, "Total Válido": 12, "NPS": 41.666666666666664, "Nível": "Zona de aperfeiçoamento"}, {"Escola": "COLÉGIO EXATO", "Segmento": "Ensino médio ", "Turma": "3-serie-medio", "Promotores": 7, "Neutros": 1, "Detratores": 0, "Total Válido": 8, "NPS": 87.5, "Nível": "Zona de excelência"}, {"Escola": "COLÉGIO EXATO", "Segmento": "Fundamental II", "Turma": "8-ano-fund-2", "Promotores": 8, "Neutros": 0, "Detratores": 0, "Total Válido": 8, "NPS": 100, "Nível": "Zona de excelência"}, {"Escola": "COLÉGIO EXATO", "Segmento": "Ensino médio ", "Turma": "1-serie-medio", "Promotores": 17, "Neutros": 0, "Detratores": 0, "Total Válido": 17, "NPS": 100, "Nível": "Zona de excelência"}, {"Escola": "COLÉGIO EXATO", "Segmento": "Fundamental II", "Turma": "7-ano-fund-2", "Promotores": 17, "Neutros": 1, "Detratores": 0, "Total Válido": 18, "NPS": 94.44444444444444, "Nível": "Zona de excelência"}, {"Escola": "COLÉGIO EXATO", "Segmento": "Ensino médio ", "Turma": "2-serie-medio", "Promotores": 14, "Neutros": 2, "Detratores": 0, "Total Válido": 16, "NPS": 87.5, "Nível": "Zona de excelência"}, {"Escola": "COLÉGIO EXATO", "Segmento": "Fundamental II", "Turma": "6-ano-fund-2", "Promotores": 14, "Neutros": 2, "Detratores": 0, "Total Válido": 16, "NPS": 87.5, "Nível": "Zona de excelência"}, {"Escola": "COLÉGIO ESSENCIAL", "Segmento": "Infantil", "Turma": "infantil-2", "Promotores": 7, "Neutros": 4, "Detratores": 1, "Total Válido": 12, "NPS": 50, "Nível": "Zona de aperfeiçoamento"}, {"Escola": "COLÉGIO ESSENCIAL", "Segmento": "Fundamental I", "Turma": "3-ano-fund-1", "Promotores": 6, "Neutros": 3, "Detratores": 2, "Total Válido": 11, "NPS": 36.36363636363636, "Nível": "Zona de aperfeiçoamento"}, {"Escola": "COLÉGIO ESSENCIAL", "Segmento": "Fundamental I", "Turma": "2-ano-fund-1", "Promotores": 7, "Neutros": 2, "Detratores": 0, "Total Válido": 9, "NPS": 77.77777777777779, "Nível": "Zona de excelência"}, {"Escola": "COLÉGIO ESSENCIAL", "Segmento": "Infantil", "Turma": "bercario", "Promotores": 7, "Neutros": 2, "Detratores": 1, "Total Válido": 10, "NPS": 60, "Nível": "Zona de qualidade"}, {"Escola": "COLÉGIO ESSENCIAL", "Segmento": "Infantil", "Turma": "infantil-3", "Promotores": 5, "Neutros": 3, "Detratores": 0, "Total Válido": 8, "NPS": 62.5, "Nível": "Zona de qualidade"}, {"Escola": "COLÉGIO ESSENCIAL", "Segmento": "Infantil", "Turma": "infantil-5", "Promotores": 8, "Neutros": 2, "Detratores": 0, "Total Válido": 10, "NPS": 80, "Nível": "Zona de excelência"}, {"Escola": "COLÉGIO ESSENCIAL", "Segmento": "Fundamental I", "Turma": "5-ano-fund-1", "Promotores": 3, "Neutros": 0, "Detratores": 0, "Total Válido": 3, "NPS": 100, "Nível": "Zona de excelência"}, {"Escola": "COLÉGIO ESSENCIAL", "Segmento": "Fundamental I", "Turma": "4-ano-fund-1", "Promotores": 4, "Neutros": 0, "Detratores": 0, "Total Válido": 4, "NPS": 100, "Nível": "Zona de excelência"}, {"Escola": "COLÉGIO ESSENCIAL", "Segmento": "Fundamental I", "Turma": "1-ano-fund-1", "Promotores": 8, "Neutros": 0, "Detratores": 0, "Total Válido": 8, "NPS": 100, "Nível": "Zona de excelência"}, {"Escola": "COLÉGIO ESSENCIAL", "Segmento": "Infantil", "Turma": "infantil-4", "Promotores": 4, "Neutros": 1, "Detratores": 0, "Total Válido": 5, "NPS": 80, "Nível": "Zona de excelência"}, {"Escola": "ANNA TAVARES", "Segmento": "Fundamental II", "Turma": "9-ano-fund-2", "Promotores": 0, "Neutros": 4, "Detratores": 4, "Total Válido": 8, "NPS": -50, "Nível": "Zona crítica"}, {"Escola": "ANNA TAVARES", "Segmento": "Ensino médio ", "Turma": "2-serie-medio", "Promotores": 0, "Neutros": 2, "Detratores": 4, "Total Válido": 6, "NPS": -66.66666666666666, "Nível": "Zona crítica"}, {"Escola": "ANNA TAVARES", "Segmento": "Fundamental I", "Turma": "2-ano-fund-1", "Promotores": 1, "Neutros": 1, "Detratores": 6, "Total Válido": 8, "NPS": -62.5, "Nível": "Zona crítica"}, {"Escola": "ANNA TAVARES", "Segmento": "Fundamental I", "Turma": "5-ano-fund-1", "Promotores": 4, "Neutros": 1, "Detratores": 1, "Total Válido": 6, "NPS": 50, "Nível": "Zona de aperfeiçoamento"}, {"Escola": "ANNA TAVARES", "Segmento": "Ensino médio ", "Turma": "3-serie-medio", "Promotores": 0, "Neutros": 1, "Detratores": 7, "Total Válido": 8, "NPS": -87.5, "Nível": "Zona crítica"}, {"Escola": "ANNA TAVARES", "Segmento": "Fundamental I", "Turma": "1-ano-fund-1", "Promotores": 0, "Neutros": 0, "Detratores": 4, "Total Válido": 4, "NPS": -100, "Nível": "Zona crítica"}, {"Escola": "ANNA TAVARES", "Segmento": "Fundamental I", "Turma": "3-ano-fund-1", "Promotores": 2, "Neutros": 1, "Detratores": 3, "Total Válido": 6, "NPS": -16.666666666666668, "Nível": "Zona crítica"}, {"Escola": "ANNA TAVARES", "Segmento": "Fundamental II", "Turma": "7-ano-fund-2", "Promotores": 1, "Neutros": 1, "Detratores": 2, "Total Válido": 4, "NPS": -25, "Nível": "Zona crítica"}, {"Escola": "ANNA TAVARES", "Segmento": "Ensino médio ", "Turma": "1-serie-medio", "Promotores": 1, "Neutros": 1, "Detratores": 2, "Total Válido": 4, "NPS": -25, "Nível": "Zona crítica"}, {"Escola": "ANNA TAVARES", "Segmento": "Fundamental II", "Turma": "6-ano-fund-2", "Promotores": 2, "Neutros": 3, "Detratores": 2, "Total Válido": 7, "NPS": 0, "Nível": "Zona de aperfeiçoamento"}, {"Escola": "ANNA TAVARES", "Segmento": "Fundamental I", "Turma": "4-ano-fund-1", "Promotores": 1, "Neutros": 0, "Detratores": 3, "Total Válido": 4, "NPS": -50, "Nível": "Zona crítica"}, {"Escola": "ANNA TAVARES", "Segmento": "Infantil", "Turma": "infantil-3", "Promotores": 0, "Neutros": 1, "Detratores": 1, "Total Válido": 2, "NPS": -50, "Nível": "Zona crítica"}, {"Escola": "ANNA TAVARES", "Segmento": "Fundamental II", "Turma": "8-ano-fund-2", "Promotores": 3, "Neutros": 0, "Detratores": 0, "Total Válido": 3, "NPS": 100, "Nível": "Zona de excelência"}, {"Escola": "ANNA TAVARES", "Segmento": "Infantil", "Turma": "bercario", "Promotores": 0, "Neutros": 0, "Detratores": 1, "Total Válido": 1, "NPS": -100, "Nível": "Zona crítica"}, {"Escola": "OLIMPUS OBJETIVO", "Segmento": "Ensino médio ", "Turma": "1-serie-medio", "Promotores": 39, "Neutros": 12, "Detratores": 8, "Total Válido": 59, "NPS": 52.54237288135594, "Nível": "Zona de qualidade"}, {"Escola": "OLIMPUS OBJETIVO", "Segmento": "Fundamental II", "Turma": "8-ano-fund-2", "Promotores": 19, "Neutros": 6, "Detratores": 1, "Total Válido": 26, "NPS": 69.23076923076923, "Nível": "Zona de qualidade"}, {"Escola": "OLIMPUS OBJETIVO", "Segmento": "Fundamental II", "Turma": "9-ano-fund-2", "Promotores": 7, "Neutros": 3, "Detratores": 0, "Total Válido": 10, "NPS": 70, "Nível": "Zona de qualidade"}, {"Escola": "OLIMPUS OBJETIVO", "Segmento": "Fundamental II", "Turma": "6-ano-fund-2", "Promotores": 4, "Neutros": 2, "Detratores": 0, "Total Válido": 6, "NPS": 66.66666666666666, "Nível": "Zona de qualidade"}, {"Escola": "OLIMPUS OBJETIVO", "Segmento": "Ensino médio ", "Turma": "3-serie-medio", "Promotores": 2, "Neutros": 1, "Detratores": 2, "Total Válido": 5, "NPS": 0, "Nível": "Zona de aperfeiçoamento"}, {"Escola": "OLIMPUS OBJETIVO", "Segmento": "Fundamental II", "Turma": "7-ano-fund-2", "Promotores": 5, "Neutros": 3, "Detratores": 1, "Total Válido": 9, "NPS": 44.44444444444445, "Nível": "Zona de aperfeiçoamento"}, {"Escola": "OLIMPUS OBJETIVO", "Segmento": "Ensino médio ", "Turma": "2-serie-medio", "Promotores": 9, "Neutros": 0, "Detratores": 0, "Total Válido": 9, "NPS": 100, "Nível": "Zona de excelência"}, {"Escola": "FENNIX MATRIZ", "Segmento": "Fundamental I", "Turma": "5-ano-fund-1", "Promotores": 6, "Neutros": 1, "Detratores": 2, "Total Válido": 9, "NPS": 44.44444444444444, "Nível": "Zona de aperfeiçoamento"}, {"Escola": "FENNIX MATRIZ", "Segmento": "Fundamental II", "Turma": "6-ano-fund-2", "Promotores": 7, "Neutros": 3, "Detratores": 2, "Total Válido": 12, "NPS": 41.66666666666667, "Nível": "Zona de aperfeiçoamento"}, {"Escola": "FENNIX MATRIZ", "Segmento": "Fundamental II", "Turma": "8-ano-fund-2", "Promotores": 4, "Neutros": 2, "Detratores": 0, "Total Válido": 6, "NPS": 66.66666666666666, "Nível": "Zona de qualidade"}, {"Escola": "FENNIX MATRIZ", "Segmento": "Fundamental I", "Turma": "1-ano-fund-1", "Promotores": 10, "Neutros": 4, "Detratores": 1, "Total Válido": 15, "NPS": 60, "Nível": "Zona de qualidade"}, {"Escola": "FENNIX MATRIZ", "Segmento": "Fundamental I", "Turma": "2-ano-fund-1", "Promotores": 8, "Neutros": 8, "Detratores": 1, "Total Válido": 17, "NPS": 41.17647058823529, "Nível": "Zona de aperfeiçoamento"}, {"Escola": "FENNIX MATRIZ", "Segmento": "Fundamental II", "Turma": "7-ano-fund-2", "Promotores": 4, "Neutros": 4, "Detratores": 1, "Total Válido": 9, "NPS": 33.33333333333333, "Nível": "Zona de aperfeiçoamento"}, {"Escola": "FENNIX MATRIZ", "Segmento": "Infantil", "Turma": "infantil-5", "Promotores": 4, "Neutros": 0, "Detratores": 1, "Total Válido": 5, "NPS": 60.00000000000001, "Nível": "Zona de qualidade"}, {"Escola": "FENNIX MATRIZ", "Segmento": "Fundamental I", "Turma": "3-ano-fund-1", "Promotores": 12, "Neutros": 1, "Detratores": 0, "Total Válido": 13, "NPS": 92.3076923076923, "Nível": "Zona de excelência"}, {"Escola": "FENNIX MATRIZ", "Segmento": "Fundamental I", "Turma": "4-ano-fund-1", "Promotores": 3, "Neutros": 2, "Detratores": 1, "Total Válido": 6, "NPS": 33.333333333333336, "Nível": "Zona de aperfeiçoamento"}, {"Escola": "FENNIX MATRIZ", "Segmento": "Fundamental II", "Turma": "9-ano-fund-2", "Promotores": 0, "Neutros": 3, "Detratores": 2, "Total Válido": 5, "NPS": -40, "Nível": "Zona crítica"}, {"Escola": "FENNIX MATRIZ", "Segmento": "Infantil", "Turma": "infantil-4", "Promotores": 6, "Neutros": 2, "Detratores": 0, "Total Válido": 8, "NPS": 75, "Nível": "Zona de qualidade"}, {"Escola": "FENNIX MATRIZ", "Segmento": "Infantil", "Turma": "infantil-3", "Promotores": 1, "Neutros": 1, "Detratores": 0, "Total Válido": 2, "NPS": 50, "Nível": "Zona de aperfeiçoamento"}, {"Escola": "FENNIX MATRIZ", "Segmento": "Infantil", "Turma": "infantil-2", "Promotores": 2, "Neutros": 0, "Detratores": 0, "Total Válido": 2, "NPS": 100, "Nível": "Zona de excelência"}, {"Escola": "FENNIX MATRIZ", "Segmento": "Infantil", "Turma": "infantil-1", "Promotores": 2, "Neutros": 0, "Detratores": 0, "Total Válido": 2, "NPS": 100, "Nível": "Zona de excelência"}, {"Escola": "DELTA", "Segmento": "Fundamental I", "Turma": "5-ano-fund-1", "Promotores": 19, "Neutros": 7, "Detratores": 1, "Total Válido": 27, "NPS": 66.66666666666667, "Nível": "Zona de qualidade"}, {"Escola": "DELTA", "Segmento": "Infantil", "Turma": "infantil-5", "Promotores": 3, "Neutros": 1, "Detratores": 0, "Total Válido": 4, "NPS": 75, "Nível": "Zona de qualidade"}, {"Escola": "DELTA", "Segmento": "Ensino médio ", "Turma": "3-serie-medio", "Promotores": 20, "Neutros": 7, "Detratores": 2, "Total Válido": 29, "NPS": 62.06896551724138, "Nível": "Zona de qualidade"}, {"Escola": "DELTA", "Segmento": "Fundamental II", "Turma": "8-ano-fund-2", "Promotores": 38, "Neutros": 5, "Detratores": 3, "Total Válido": 46, "NPS": 76.08695652173914, "Nível": "Zona de excelência"}, {"Escola": "DELTA", "Segmento": "Fundamental I", "Turma": "1-ano-fund-1", "Promotores": 14, "Neutros": 2, "Detratores": 8, "Total Válido": 24, "NPS": 25.000000000000007, "Nível": "Zona de aperfeiçoamento"}, {"Escola": "DELTA", "Segmento": "Fundamental I", "Turma": "2-ano-fund-1", "Promotores": 20, "Neutros": 5, "Detratores": 3, "Total Válido": 28, "NPS": 60.71428571428572, "Nível": "Zona de qualidade"}, {"Escola": "DELTA", "Segmento": "Ensino médio ", "Turma": "1-serie-medio", "Promotores": 36, "Neutros": 10, "Detratores": 1, "Total Válido": 47, "NPS": 74.46808510638297, "Nível": "Zona de qualidade"}, {"Escola": "DELTA", "Segmento": "Fundamental II", "Turma": "6-ano-fund-2", "Promotores": 26, "Neutros": 7, "Detratores": 0, "Total Válido": 33, "NPS": 78.78787878787878, "Nível": "Zona de excelência"}, {"Escola": "DELTA", "Segmento": "Ensino médio ", "Turma": "2-serie-medio", "Promotores": 48, "Neutros": 2, "Detratores": 0, "Total Válido": 50, "NPS": 96, "Nível": "Zona de excelência"}, {"Escola": "DELTA", "Segmento": "Fundamental II", "Turma": "9-ano-fund-2", "Promotores": 32, "Neutros": 6, "Detratores": 4, "Total Válido": 42, "NPS": 66.66666666666666, "Nível": "Zona de qualidade"}, {"Escola": "DELTA", "Segmento": "Fundamental I", "Turma": "4-ano-fund-1", "Promotores": 26, "Neutros": 8, "Detratores": 0, "Total Válido": 34, "NPS": 76.47058823529412, "Nível": "Zona de excelência"}, {"Escola": "DELTA", "Segmento": "Infantil", "Turma": "infantil-1", "Promotores": 6, "Neutros": 0, "Detratores": 0, "Total Válido": 6, "NPS": 100, "Nível": "Zona de excelência"}, {"Escola": "DELTA", "Segmento": "Fundamental II", "Turma": "7-ano-fund-2", "Promotores": 36, "Neutros": 4, "Detratores": 2, "Total Válido": 42, "NPS": 80.95238095238095, "Nível": "Zona de excelência"}, {"Escola": "DELTA", "Segmento": "Fundamental I", "Turma": "3-ano-fund-1", "Promotores": 27, "Neutros": 5, "Detratores": 1, "Total Válido": 33, "NPS": 78.7878787878788, "Nível": "Zona de excelência"}, {"Escola": "DELTA", "Segmento": "Infantil", "Turma": "infantil-2", "Promotores": 4, "Neutros": 1, "Detratores": 0, "Total Válido": 5, "NPS": 80, "Nível": "Zona de excelência"}, {"Escola": "DELTA", "Segmento": "Infantil", "Turma": "infantil-3", "Promotores": 4, "Neutros": 1, "Detratores": 3, "Total Válido": 8, "NPS": 12.5, "Nível": "Zona de aperfeiçoamento"}, {"Escola": "DELTA", "Segmento": "Infantil", "Turma": "infantil-4", "Promotores": 2, "Neutros": 0, "Detratores": 0, "Total Válido": 2, "NPS": 100, "Nível": "Zona de excelência"}, {"Escola": "ESJC", "Segmento": "Infantil", "Turma": "infantil-4", "Promotores": 4, "Neutros": 0, "Detratores": 1, "Total Válido": 5, "NPS": 60.00000000000001, "Nível": "Zona de qualidade"}, {"Escola": "ESJC", "Segmento": "Fundamental II", "Turma": "9-ano-fund-2", "Promotores": 6, "Neutros": 1, "Detratores": 0, "Total Válido": 7, "NPS": 85.71428571428571, "Nível": "Zona de excelência"}, {"Escola": "ESJC", "Segmento": "Fundamental I", "Turma": "2-ano-fund-1", "Promotores": 13, "Neutros": 2, "Detratores": 3, "Total Válido": 18, "NPS": 55.55555555555556, "Nível": "Zona de qualidade"}, {"Escola": "ESJC", "Segmento": "Fundamental I", "Turma": "4-ano-fund-1", "Promotores": 3, "Neutros": 1, "Detratores": 2, "Total Válido": 6, "NPS": 16.666666666666668, "Nível": "Zona de aperfeiçoamento"}, {"Escola": "ESJC", "Segmento": "Fundamental II", "Turma": "7-ano-fund-2", "Promotores": 4, "Neutros": 2, "Detratores": 4, "Total Válido": 10, "NPS": 0, "Nível": "Zona de aperfeiçoamento"}, {"Escola": "ESJC", "Segmento": "Fundamental I", "Turma": "5-ano-fund-1", "Promotores": 10, "Neutros": 3, "Detratores": 5, "Total Válido": 18, "NPS": 27.77777777777778, "Nível": "Zona de aperfeiçoamento"}, {"Escola": "ESJC", "Segmento": "Fundamental I", "Turma": "1-ano-fund-1", "Promotores": 18, "Neutros": 4, "Detratores": 2, "Total Válido": 24, "NPS": 66.66666666666666, "Nível": "Zona de qualidade"}, {"Escola": "ESJC", "Segmento": "Infantil", "Turma": "infantil-2", "Promotores": 8, "Neutros": 1, "Detratores": 2, "Total Válido": 11, "NPS": 54.54545454545454, "Nível": "Zona de qualidade"}, {"Escola": "ESJC", "Segmento": "Infantil", "Turma": "infantil-1", "Promotores": 8, "Neutros": 0, "Detratores": 1, "Total Válido": 9, "NPS": 77.77777777777777, "Nível": "Zona de excelência"}, {"Escola": "ESJC", "Segmento": "Fundamental I", "Turma": "3-ano-fund-1", "Promotores": 8, "Neutros": 3, "Detratores": 1, "Total Válido": 12, "NPS": 58.33333333333333, "Nível": "Zona de qualidade"}, {"Escola": "ESJC", "Segmento": "Ensino médio ", "Turma": "1-serie-medio", "Promotores": 0, "Neutros": 2, "Detratores": 3, "Total Válido": 5, "NPS": -60, "Nível": "Zona crítica"}, {"Escola": "ESJC", "Segmento": "Infantil", "Turma": "infantil-5", "Promotores": 5, "Neutros": 2, "Detratores": 0, "Total Válido": 7, "NPS": 71.42857142857143, "Nível": "Zona de qualidade"}, {"Escola": "ESJC", "Segmento": "Fundamental II", "Turma": "8-ano-fund-2", "Promotores": 11, "Neutros": 3, "Detratores": 3, "Total Válido": 17, "NPS": 47.05882352941176, "Nível": "Zona de aperfeiçoamento"}, {"Escola": "ESJC", "Segmento": "Fundamental II", "Turma": "6-ano-fund-2", "Promotores": 11, "Neutros": 6, "Detratores": 5, "Total Válido": 22, "NPS": 27.27272727272727, "Nível": "Zona de aperfeiçoamento"}, {"Escola": "ESJC", "Segmento": "Ensino médio ", "Turma": "3-serie-medio", "Promotores": 1, "Neutros": 2, "Detratores": 2, "Total Válido": 5, "NPS": -20, "Nível": "Zona crítica"}, {"Escola": "ESJC", "Segmento": "Ensino médio ", "Turma": "2-serie-medio", "Promotores": 6, "Neutros": 2, "Detratores": 1, "Total Válido": 9, "NPS": 55.55555555555556, "Nível": "Zona de qualidade"}, {"Escola": "ESJC", "Segmento": "Infantil", "Turma": "infantil-3", "Promotores": 0, "Neutros": 0, "Detratores": 1, "Total Válido": 1, "NPS": -100, "Nível": "Zona crítica"}];
+
+const fmt = new Intl.NumberFormat('pt-BR');
+function n(v){return Number(v||0)}
+function pct(part,total){ return total ? ((part/total)*100).toFixed(1).replace('.', ',') + '%' : '0,0%'; }
+function npsClass(v){ if(v < 0) return 'nps-bad'; if(v < 50) return 'nps-mid'; return 'nps-good'; }
+function levelColor(nps){ if(nps < 0) return '#d93025'; if(nps < 50) return '#f4b400'; return '#12a150'; }
+
+
+// Plugin simples para rótulos diretamente nos gráficos
+const valueLabelsPlugin = {
+  id: 'valueLabelsPlugin',
+  afterDatasetsDraw(chart, args, pluginOptions) {
+    const opts = chart.options.plugins && chart.options.plugins.valueLabels;
+    if (!opts || opts.enabled === false) return;
+    const {ctx} = chart;
+    ctx.save();
+    ctx.font = opts.font || 'bold 11px Arial';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+
+    const formatValue = (value, dataset, dataIndex) => {
+      const total = dataset.data.reduce((a,b)=>a + Number(b || 0), 0);
+      if (opts.format === 'percent') {
+        const pctValue = total ? (Number(value || 0) / total * 100) : 0;
+        return `${fmt.format(Number(value || 0))} (${pctValue.toFixed(1).replace('.', ',')}%)`;
+      }
+      if (opts.format === 'nps') return Number(value || 0).toFixed(1).replace('.', ',');
+      return fmt.format(Number(value || 0));
+    };
+
+    chart.data.datasets.forEach((dataset, datasetIndex) => {
+      const meta = chart.getDatasetMeta(datasetIndex);
+      if (meta.hidden) return;
+      meta.data.forEach((element, dataIndex) => {
+        const value = dataset.data[dataIndex];
+        if (value === null || value === undefined) return;
+        const label = formatValue(value, dataset, dataIndex);
+        const pos = element.tooltipPosition();
+        let x = pos.x, y = pos.y;
+        ctx.fillStyle = opts.color || '#172033';
+
+        if (chart.config.type === 'bar') {
+          const parsed = meta.controller.getParsed(dataIndex);
+          const isNegative = parsed.y < 0;
+          y = element.y + (isNegative ? 14 : -12);
+          ctx.textBaseline = isNegative ? 'top' : 'bottom';
+        }
+
+        if (chart.config.type === 'doughnut' || chart.config.type === 'pie') {
+          ctx.fillStyle = '#172033';
+          ctx.font = opts.font || 'bold 12px Arial';
+        }
+        ctx.fillText(label, x, y);
+      });
+    });
+    ctx.restore();
+  }
+};
+Chart.register(valueLabelsPlugin);
+
+function obsForSchool(escola, lowSampleCount){
+  if(escola === 'ANNA TAVARES') return {type:'red', title:'🔴 ANNA TAVARES — atenção crítica', text:'Resultado realmente fora da curva. O volume de detratores é alto e merece leitura qualitativa das respostas abertas e plano de ação específico.'};
+  if(escola === 'ESJC') return {type:'yellow', title:'🟡 ESJC — abaixo da média da rede', text:'A escola está abaixo da média geral da ACTA. O resultado não invalida a análise, mas indica necessidade de investigação por segmento e turma.'};
+  if(escola === 'CEAV JR') return {type:'yellow', title:'🟡 CEAV JR — amostra pequena', text:'A escola possui baixa quantidade de respostas válidas. Evite conclusões fortes sem complementar com análise qualitativa.'};
+  if(escola === 'ACTA - CONSOLIDADO') return {type:'green', title:'🟢 Consolidado ACTA', text:'Visão geral da rede considerando somente respostas válidas. Use este filtro para leitura executiva consolidada.'};
+  let extra = lowSampleCount > 0 ? ` Há ${lowSampleCount} turma(s) com menos de 5 respostas válidas; essas turmas não devem ser usadas isoladamente para tomada de decisão.` : '';
+  return {type:'green', title:'🟢 Resultado consistente', text:'A unidade apresenta resultado estatisticamente adequado para análise de NPS dentro dos critérios definidos.' + extra};
+}
+
+function normalizeSchoolName(value){
+  return String(value || '')
+    .normalize('NFD').replace(/[̀-ͯ]/g,'')
+    .toUpperCase()
+    .replace(/^ESCOLA\s+/, '')
+    .replace(/^COLEGIO\s+/, '')
+    .replace(/\s+/g,' ')
+    .trim();
+}
+function sameSchool(a,b){ return normalizeSchoolName(a) === normalizeSchoolName(b); }
+
+let rankingChart, distChart, segmentChart, segmentValidChart;
+function makeChart(ref, type, data, options){
+  const ctx = document.getElementById(ref);
+  return new Chart(ctx, {type, data, options});
+}
+function destroyCharts(){[rankingChart,distChart,segmentChart,segmentValidChart].forEach(c=>{if(c)c.destroy();})}
+function updateDashboard(){
+  const escola = document.getElementById('schoolSelect').value;
+  const r = summary.find(x=>x.Escola===escola) || summary[0];
+  const nomeEscolaFiltrada = escola === 'ACTA - CONSOLIDADO' ? 'ACTA - Consolidado Geral' : escola;
+
+  document.getElementById('tituloRanking').textContent =
+    escola === 'ACTA - CONSOLIDADO'
+      ? 'Ranking de NPS por escola — ACTA - Consolidado Geral'
+      : `Ranking de NPS por escola — ${nomeEscolaFiltrada}`;
+
+  document.getElementById('tituloDistribuicao').textContent =
+    `Distribuição — ${nomeEscolaFiltrada}`;
+
+  document.getElementById('tituloSegmento').textContent =
+    `NPS por segmento — ${nomeEscolaFiltrada}`;
+
+  document.getElementById('tituloValidosSegmento').textContent =
+    `Respostas válidas por segmento — ${nomeEscolaFiltrada}`;
+
+  document.getElementById('tituloTurmas').textContent =
+    `Turmas da escola filtrada — ${nomeEscolaFiltrada}`;
+  const validas = n(r['Total Válido']);
+  const prom = n(r.Promotores), neut = n(r.Neutros), det = n(r.Detratores);
+  const nps = n(r['NPS Geral']);
+  document.getElementById('kpiNps').textContent = nps.toFixed(1).replace('.', ',');
+  document.getElementById('kpiNps').style.color = levelColor(nps);
+  document.getElementById('kpiNivel').textContent = r['Nível Geral da Escola'] || '-';
+  document.getElementById('levelBadge').textContent = r['Nível Geral da Escola'] || '-';
+  document.getElementById('kpiValidas').textContent = fmt.format(validas);
+  document.getElementById('kpiProm').textContent = fmt.format(prom);
+  document.getElementById('kpiNeut').textContent = fmt.format(neut);
+  document.getElementById('kpiDet').textContent = fmt.format(det);
+  document.getElementById('kpiPromPct').textContent = pct(prom, prom+neut+det || validas);
+  document.getElementById('kpiNeutPct').textContent = pct(neut, prom+neut+det || validas);
+  document.getElementById('kpiDetPct').textContent = pct(det, prom+neut+det || validas);
+
+  const turmasEscola = escola === 'ACTA - CONSOLIDADO' ? turmas : turmas.filter(t=>sameSchool(t.Escola, escola));
+  const lowSample = turmasEscola.filter(t=>n(t['Total Válido']) > 0 && n(t['Total Válido']) < 5).length;
+  document.getElementById('kpiLowSample').textContent = lowSample;
+  const obs = obsForSchool(escola, lowSample);
+  const box = document.getElementById('observationBox');
+  box.className = 'card wide12 alert ' + obs.type;
+  document.getElementById('obsTitle').textContent = obs.title;
+  document.getElementById('obsText').textContent = obs.text;
+
+  destroyCharts();
+  const rankingData = (escola === 'ACTA - CONSOLIDADO' ? summary.filter(x=>x.Escola !== 'ACTA - CONSOLIDADO') : summary.filter(x=>x.Escola === escola)).sort((a,b)=>n(b['NPS Geral'])-n(a['NPS Geral']));
+  rankingChart = makeChart('rankingChart','bar',{
+    labels: rankingData.map(x=>x.Escola),
+    datasets:[{label:'NPS', data:rankingData.map(x=>n(x['NPS Geral'])), backgroundColor:rankingData.map(x=>levelColor(n(x['NPS Geral']))), borderWidth:0}]
+  },{responsive:true, maintainAspectRatio:false, layout:{padding:{top:24}}, plugins:{legend:{display:false}, valueLabels:{enabled:true, format:'nps'}}, scales:{y:{min:-100,max:100,grid:{color:'#eef2f7'}}, x:{ticks:{autoSkip:false,maxRotation:45,minRotation:35}}}});
+
+  distChart = makeChart('distChart','doughnut',{
+    labels:['Promotores','Neutros','Detratores'],
+    datasets:[{data:[prom,neut,det], backgroundColor:['#12a150','#f4b400','#d93025']}]
+  },{responsive:true, maintainAspectRatio:false, layout:{padding:{top:8,bottom:8,left:8,right:8}}, plugins:{legend:{position:'bottom'}, valueLabels:{enabled:true, format:'percent'}}});
+
+  const segs = escola === 'ACTA - CONSOLIDADO' ? aggregateSegments() : segments.filter(s=>sameSchool(s.Escola, escola));
+  segmentChart = makeChart('segmentChart','bar',{
+    labels:segs.map(s=>s.Segmento),
+    datasets:[{label:'NPS', data:segs.map(s=>n(s.NPS)), backgroundColor:segs.map(s=>levelColor(n(s.NPS)))}]
+  },{responsive:true, maintainAspectRatio:false, layout:{padding:{top:24}}, plugins:{legend:{display:false}, valueLabels:{enabled:true, format:'nps'}}, scales:{y:{min:-100,max:100}}});
+  segmentValidChart = makeChart('segmentValidChart','bar',{
+    labels:segs.map(s=>s.Segmento),
+    datasets:[{label:'Respostas válidas', data:segs.map(s=>n(s['Total Válido'])), backgroundColor:'#3157d5'}]
+  },{responsive:true, maintainAspectRatio:false, layout:{padding:{top:24}}, plugins:{legend:{display:false}, valueLabels:{enabled:true, format:'count'}}});
+  buildTurmasTable(turmasEscola);
+}
+function aggregateSegments(){
+  const map = new Map();
+  segments.forEach(s=>{
+    const key=s.Segmento||'Não informado';
+    if(!map.has(key)) map.set(key,{Segmento:key,Promotores:0,Neutros:0,Detratores:0,'Total Válido':0,NPS:0});
+    const o=map.get(key); o.Promotores+=n(s.Promotores); o.Neutros+=n(s.Neutros); o.Detratores+=n(s.Detratores); o['Total Válido']+=n(s['Total Válido']);
+  });
+  return [...map.values()].map(o=>{o.NPS=o['Total Válido']?((o.Promotores-o.Detratores)/o['Total Válido']*100):0;return o;}).sort((a,b)=>n(b['Total Válido'])-n(a['Total Válido']));
+}
+function buildTurmasTable(rows){
+  const table = document.getElementById('turmasTable');
+  const sorted = [...rows].sort((a,b)=>n(a['Total Válido'])-n(b['Total Válido']));
+  if(sorted.length === 0){
+    table.innerHTML = `<thead><tr><th>Escola</th><th>Segmento</th><th>Turma</th><th>Válidas</th><th>Prom.</th><th>Neut.</th><th>Det.</th><th>NPS</th><th>Observação</th></tr></thead><tbody><tr><td colspan="9">Nenhuma turma encontrada para esta escola na base de turmas.</td></tr></tbody>`;
+    return;
+  }
+  table.innerHTML = `<thead><tr><th>Escola</th><th>Segmento</th><th>Turma</th><th>Válidas</th><th>Prom.</th><th>Neut.</th><th>Det.</th><th>NPS</th><th>Observação</th></tr></thead><tbody>` +
+    sorted.map(t=>{
+      const low = n(t['Total Válido']) > 0 && n(t['Total Válido']) < 5;
+      const nps = n(t.NPS);
+      return `<tr><td>${t.Escola||''}</td><td>${t.Segmento||''}</td><td>${t.Turma||''}</td><td>${fmt.format(n(t['Total Válido']))}</td><td>${fmt.format(n(t.Promotores))}</td><td>${fmt.format(n(t.Neutros))}</td><td>${fmt.format(n(t.Detratores))}</td><td class="${npsClass(nps)}">${nps.toFixed(1).replace('.', ',')}</td><td>${low?'<span class="tag yellow">Amostra insuficiente</span>':'<span class="tag green">OK</span>'}</td></tr>`
+    }).join('') + '</tbody>';
+}
+function init(){
+  const select=document.getElementById('schoolSelect');
+  summary.forEach(r=>{ const opt=document.createElement('option'); opt.value=r.Escola; opt.textContent=r.Escola; select.appendChild(opt); });
+  select.value='ACTA - CONSOLIDADO';
+  select.addEventListener('change',updateDashboard);
+  updateDashboard();
+}
+init();
+</script>
+</body>
+</html>
